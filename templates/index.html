@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{title}}</title>
+  <link rel="icon" type="image/png" href="images/favicon-32x32.png" sizes="32x32" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+</head>
+<body>
+  <div class="w3-main">
+    <div class="w3-row-padding w3-padding-16">
+
+      <div class="w3-container w3-card-2 w3-white w3-margin-bottom">
+        <div class="w3-center">
+          <h1>{{title}}</h1>
+          <h3>Let's see how people feel while Tweeting about SpaceX and the Falcon 9...</h3>
+        </div>
+      </div>
+
+      <div class="w3-half"> 
+        <div class="w3-container w3-card-2 w3-white w3-margin-bottom">
+          <div class="w3-center">
+            <h3>Cori Grohman</h3>
+            <h6>MS Electrical Engineering Student<br>Texas State University</h6>
+            <p class="social-icons icon-circle list-unstyled list-inline icon.zoom"> 
+               <a href="https://github.com/cgrohman"><i class="fa fa-github-alt"></i></a> 
+               <a href="https://www.linkedin.com/in/corigrohman/"><i class="fa fa-linkedin"></i></a> 
+               </i></a> 
+               <a href="mailto:corigrohman@gmail.com?Subject=Hi%20Cori!"><i class="fa fa-envelope"></i></a>
+               <a href="www.corigrohman.com"><i class="fa fa-code"></i></a> 
+            </p>  
+          </div>
+        </div>
+      </div>
+
+      <div class="w3-half">
+        <div class="w3-container w3-card-2 w3-white w3-margin-bottom">
+          <div class="w3-center">
+            <h3>Objective</h3>
+            <p>The purpose of this webpage is to demonstrate my knowledge of the following: Python (Flask) based back-end, HTML/CSS/JS and JSON front-end technologies, AWS hosting services (this app isn't hosted on AWS, my presonal <a href="www.corigrohman.com">website</a> is!). Also, I'm interested to see the frequency of Tweets and what sort of sentiment they contain!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="w3-twothird">
+        <div class="w3-container w3-card-2 w3-white w3-margin-bottom">
+          <h2 class="w3-center">Sentiment Chart</h2>
+          <div id="sentiment-chart" class="sentiment-chart" style="height: 400px; margin: 0 auto"></div>
+        </div>
+      </div>
+      <div class="w3-third">
+        <div class="w3-container w3-card-2 w3-white w3-margin-bottom">
+          <h2 class="w3-center">Tweets</h2>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+<script type="text/javascript">
+  $(document).ready(function () {
+    Highcharts.setOptions({
+        global: {
+            useUTC: false
+        }
+    });
+
+    Highcharts.chart('sentiment-chart', {
+        chart: {
+            type: 'spline',
+            animation: Highcharts.svg, // don't animate in old IE
+            marginRight: 10,
+            events: {
+                load: function () {
+                    // set up the updating of the chart each second
+                    var series_h = this.series[0];
+                    var series_s = this.series[1];
+                    var series_m = this.series[2];
+                    setInterval(function() {
+                      $.get('http://127.0.0.1:5000/api/sentiment',
+                          function (response) {
+                            var obj = JSON.parse(response);
+                            console.log(obj);
+                            var x = (new Date()).getTime(); // current time
+                            series_h.addPoint([x, obj['happy']], true, true);
+                            series_s.addPoint([x, obj['sad']], true, true);
+                            series_m.addPoint([x, obj['mad']], true, true);
+                          });
+                        //y = Math.random()*10 + 70;
+                    }, 10000);
+                }
+            }
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            type: 'datetime',
+            tickPixelInterval: 150
+        },
+        yAxis: {
+            title: {
+                text: 'Value'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+              }]
+        },
+        tooltip: {
+            formatter: function () {
+                return '<b>' + this.series.name + '</b><br/>' +
+                    Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+                    Highcharts.numberFormat(this.y, 2);
+            }
+        },
+        legend: {
+            enabled: true
+        },
+        exporting: {
+            enabled: false
+        },
+        series: [{
+            name: 'Happy',
+            color: '#34B197',
+            data: (function () {
+                // generate an array of random data
+                $.get('http://127.0.0.1:5000/api/data',
+                          function (response) {
+                            var obj = JSON.parse(response);
+                            console.log(obj);
+                            var i;
+                            for (i = 0; i < obj.length; i++){
+                              data.push({
+                                x: obj[i]['date'],
+                                y: obj[i]['happy']
+                              })
+                            return data;
+                            }
+                          });
+              }())
+                // var data = [],
+                //     time = (new Date()).getTime(),
+                //     i;
+
+                // for (i = -19; i <= 0; i += 1) {
+                //     data.push({
+                //         x: time + i * 1000,
+                //         y: Math.random()
+                //     });
+                //}
+                //return data;
+            //}())
+        },{
+          name: 'Sad',
+          color: '#0085AE',
+          data: (function () {
+
+
+              // generate an array of random data
+              var data = [],
+                  time = (new Date()).getTime(),
+                  i;
+
+              for (i = -19; i <= 0; i += 1) {
+                  data.push({
+                      x: time + i * 1000,
+                      y: Math.random()
+                  });
+              }
+              return data;
+          }())
+        },{
+          name: 'Mad',
+          color:'#ec6778',
+          data: (function () {
+              // generate an array of random data
+              var data = [],
+                  time = (new Date()).getTime(),
+                  i;
+
+              for (i = -19; i <= 0; i += 1) {
+                  data.push({
+                      x: time + i * 1000,
+                      y: Math.random()
+                  });
+              }
+              return data;
+          }())
+        }]
+    });
+});
+
+  Highcharts.theme = {
+   colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066', '#eeaaee',
+      '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
+   chart: {
+      backgroundColor: {
+         linearGradient: { x1: 0, y1: 0, x2: 1, y2: 1 },
+         stops: [
+            [0, '#2a2a2b'],
+            [1, '#3e3e40']
+         ]
+      },
+      style: {
+         fontFamily: '\'Roboto\', sans-serif'
+      },
+      plotBorderColor: '#606063'
+   },
+   title: {
+      style: {
+         color: '#E0E0E3',
+         textTransform: 'uppercase',
+         fontSize: '20px'
+      }
+   },
+   subtitle: {
+      style: {
+         color: '#E0E0E3',
+         textTransform: 'uppercase'
+      }
+   },
+   xAxis: {
+      gridLineColor: '#707073',
+      labels: {
+         style: {
+            color: '#E0E0E3'
+         }
+      },
+      lineColor: '#707073',
+      minorGridLineColor: '#505053',
+      tickColor: '#707073',
+      title: {
+         style: {
+            color: '#A0A0A3'
+
+         }
+      }
+   },
+   yAxis: {
+      gridLineColor: '#707073',
+      labels: {
+         style: {
+            color: '#E0E0E3'
+         }
+      },
+      lineColor: '#707073',
+      minorGridLineColor: '#505053',
+      tickColor: '#707073',
+      tickWidth: 1,
+      title: {
+         style: {
+            color: '#A0A0A3'
+         }
+      }
+   },
+   tooltip: {
+      backgroundColor: 'rgba(0, 0, 0, 0.85)',
+      style: {
+         color: '#F0F0F0'
+      }
+   },
+   plotOptions: {
+      series: {
+         dataLabels: {
+            color: '#B0B0B3'
+         },
+         marker: {
+            lineColor: '#333'
+         }
+      },
+      boxplot: {
+         fillColor: '#505053'
+      },
+      candlestick: {
+         lineColor: 'white'
+      },
+      errorbar: {
+         color: 'white'
+      }
+   },
+   legend: {
+      itemStyle: {
+         color: '#E0E0E3'
+      },
+      itemHoverStyle: {
+         color: '#FFF'
+      },
+      itemHiddenStyle: {
+         color: '#606063'
+      }
+   },
+   credits: {
+      style: {
+         color: '#666'
+      }
+   },
+   labels: {
+      style: {
+         color: '#707073'
+      }
+   },
+
+   drilldown: {
+      activeAxisLabelStyle: {
+         color: '#F0F0F3'
+      },
+      activeDataLabelStyle: {
+         color: '#F0F0F3'
+      }
+   },
+
+   navigation: {
+      buttonOptions: {
+         symbolStroke: '#DDDDDD',
+         theme: {
+            fill: '#505053'
+         }
+      }
+   },
+
+   // scroll charts
+   rangeSelector: {
+      buttonTheme: {
+         fill: '#505053',
+         stroke: '#000000',
+         style: {
+            color: '#CCC'
+         },
+         states: {
+            hover: {
+               fill: '#707073',
+               stroke: '#000000',
+               style: {
+                  color: 'white'
+               }
+            },
+            select: {
+               fill: '#000003',
+               stroke: '#000000',
+               style: {
+                  color: 'white'
+               }
+            }
+         }
+      },
+      inputBoxBorderColor: '#505053',
+      inputStyle: {
+         backgroundColor: '#333',
+         color: 'silver'
+      },
+      labelStyle: {
+         color: 'silver'
+      }
+   },
+
+   navigator: {
+      handles: {
+         backgroundColor: '#666',
+         borderColor: '#AAA'
+      },
+      outlineColor: '#CCC',
+      maskFill: 'rgba(255,255,255,0.1)',
+      series: {
+         color: '#7798BF',
+         lineColor: '#A6C7ED'
+      },
+      xAxis: {
+         gridLineColor: '#505053'
+      }
+   },
+
+   scrollbar: {
+      barBackgroundColor: '#808083',
+      barBorderColor: '#808083',
+      buttonArrowColor: '#CCC',
+      buttonBackgroundColor: '#606063',
+      buttonBorderColor: '#606063',
+      rifleColor: '#FFF',
+      trackBackgroundColor: '#404043',
+      trackBorderColor: '#404043'
+   },
+
+   // special colors for some of the
+   legendBackgroundColor: 'rgba(0, 0, 0, 0.5)',
+   background2: '#505053',
+   dataLabelsColor: '#B0B0B3',
+   textColor: '#C0C0C0',
+   contrastTextColor: '#F0F0F3',
+   maskColor: 'rgba(255,255,255,0.3)'
+};
+
+// Apply the theme
+//Highcharts.setOptions(Highcharts.theme);
+</script>
+</html>
